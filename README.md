@@ -1,6 +1,6 @@
 # Yodlee Now
 
-Get real easy access the new Yodlee REST API via this Ruby Gem. This API is the easiest way ever to access financial data at the tens of thousands of institutions partnered with Yodlee.  See http://yodlee.com and http://devnow.yodlee.com.
+Yodlee's new REST API allows easy access to financial data at the tens of thousands of institutions partnered with Yodlee.  This gem wraps the REST API.  See http://yodlee.com and http://devnow.yodlee.com for more detail on Yodlee's offerings.
 
 ## Installation
 
@@ -37,6 +37,14 @@ Some sample code for irb or rails' console:
 
 This will return sample transaction data for the last account added by the test user referenced above.
 
+For a full JSON response of a user's item summaries
+
+    yodSummaries.response
+
+Note the login and load methods return true or false so you can test for response success.  Check the error method on the object if you receive a false response.
+
+    yodSummaries.error
+    
 TODO: Lots. Clean up sample txn system.  Add user registration and account enrollment.  Build multiTXN parsers.
 
 TODO: Write tests
