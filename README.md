@@ -18,7 +18,7 @@ Or install it yourself as:
 
 ## Usage
 
-If you are starting from zero - sign up for developer access at [https://devnow.yodlee.com/].  You will get your cobrandLogin and cobrandPassword here.
+If you are starting from zero - sign up for developer access at https://devnow.yodlee.com/.  You will get your cobrandLogin and cobrandPassword here.
 
  * Note your cobrandPassword is NOT the password you choose when creating your account, see the Developer Info tab once logged in.  
  * Start with the test accounts given to you.  The login is shown on the developer info page, the password is the login + '#123' (eg for test user name 'sbMemtestaccount1' the password would be 'sbMemtestaccount1#123')
@@ -61,7 +61,7 @@ Again, a ton of data.  For credit card accounts, get full JSON transaction data 
 
     yodSummaries.card_transactions(1,2)
 
-And if you just want to collect the basics - transaction ID, date posted, description, amount and currency - in simple array format:
+And if you just want to collect the basics - transaction ID, transaction date, date posted, description, amount and currency - in simple array format:
 
     yodSummaries.card_transaction_basics(1,2)
 

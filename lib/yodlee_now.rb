@@ -120,10 +120,19 @@ module YodleeNow
     def card_transaction_basics(institution_order,account_order)
       txns = []
       self.response[institution_order]['itemData']['accounts'][account_order]['cardTransactions'].each do |txn|
-        postdate = Date.parse(txn['postDate']['date'])
+        if txn['postDate'].nil? || txn['postDate'].empty? || txn['postDate']['date'].nil? || txn['postDate']['date'].empty?
+          postdate = 'NOT POSTED'
+        else
+          postdate = Date.parse(txn['postDate']['date']).to_s
+        end
+        if txn['transDate'].nil? || txn['transDate'].empty? || ['date'].nil? || txn['transDate']['date'].empty?
+          txndate = 'NO TXN DATE'
+        else
+          txndate = Date.parse(txn['transDate']['date']).to_s
+        end
         amount = txn['transAmount']['amount']
         currency = txn['transAmount']['currencyCode']
-        txns << [txn['cardTransactionId'],postdate.to_s,txn['description'],amount,currency]
+        txns << [txn['cardTransactionId'],txndate, postdate,txn['description'],amount,currency]
       end
       return txns
     end
