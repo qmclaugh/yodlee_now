@@ -100,6 +100,34 @@ module YodleeNow
     def card_txn_test
       self.response.last['itemData']['accounts'].last['cardTransactions'].collect{|t| [t['description'],t['transAmount']['amount'], Date.parse(t['postDate']['date']).to_s]}
     end
+
+    def institution_names
+      self.response.collect{ |res| res['itemDisplayName']}
+    end
+
+    def account_names(institution_order)
+      self.response[institution_order]['itemData']['accounts'].collect{|t| [t['accountName'], t['accountNumber']]}
+    end
+
+    def account_data(institution_order,account_order)
+      self.response[institution_order]['itemData']['accounts'][account_order]
+    end
+
+    def card_transactions(institution_order,account_order)
+      self.response[institution_order]['itemData']['accounts'][account_order]['cardTransactions']
+    end
+    
+    def card_transaction_basics(institution_order,account_order)
+      txns = []
+      self.response[institution_order]['itemData']['accounts'][account_order]['cardTransactions'].each do |txn|
+        postdate = Date.parse(txn['postDate']['date'])
+        amount = txn['transAmount']['amount']
+        currency = txn['transAmount']['currencyCode']
+        txns << [txn['cardTransactionId'],postdate.to_s,txn['description'],amount,currency]
+      end
+      return txns
+    end
+
   end
 
 end

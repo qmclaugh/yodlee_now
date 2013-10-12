@@ -37,13 +37,34 @@ Some sample code for irb or rails' console:
 
 This will return sample transaction data for the last account added by the test user referenced above.
 
-For a full JSON response of a user's item summaries
-
-    yodSummaries.response
-
 Note the login and load methods return true or false so you can test for response success.  Check the error method on the object if you receive a false response.
 
     yodSummaries.error
+
+For a full JSON response of a user's item summaries:
+
+    yodSummaries.response
+
+However, that is a ton of data. This might be easier:
+
+    yodSummaries.institution_names
+
+This returns a list of financial institutions in the Item Summaries.  Note the order.  To get a list of accounts within an institution, call the index order of the institution name.  The first item would be 0 in standard Ruby array nomenclature.
+
+    yodSummaries.account_names(0)
+
+Now you can get a big dump of account data for each institution and account by passing the index order of each:
+
+    yodSummaries.account_data(1,2)
+
+Again, a ton of data.  For credit card accounts, get full transaction data with:
+
+    yodSummaries.card_transactions(1,2)
+
+And if you just want to collect the basics - transaction ID, date posted, description, amount and currency:
+
+    yodSummaries.card_transaction_basics(1,2)
+
     
 TODO: Lots. Clean up sample txn system.  Add user registration and account enrollment.  Build multiTXN parsers.
 
