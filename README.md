@@ -49,19 +49,19 @@ However, that is a ton of data. This might be easier:
 
     yodSummaries.institution_names
 
-This returns a list of financial institutions in the Item Summaries.  Note the order.  To get a list of accounts within an institution, call the index order of the institution name.  The first item would be 0 in standard Ruby array nomenclature.
+This returns an array of financial institutions from the Item Summaries.  Note the order.  To get a list of accounts within an institution, call the index order of the institution name.  The first item would be 0 in standard Ruby array nomenclature.
 
     yodSummaries.account_names(0)
 
-Now you can get a big dump of account data for each institution and account by passing the index order of each:
+Which also returns an array.  Now you can get a big JSON dump of account data for each institution and account by passing the index order of each:
 
     yodSummaries.account_data(1,2)
 
-Again, a ton of data.  For credit card accounts, get full transaction data with:
+Again, a ton of data.  For credit card accounts, get full JSON transaction data with:
 
     yodSummaries.card_transactions(1,2)
 
-And if you just want to collect the basics - transaction ID, date posted, description, amount and currency:
+And if you just want to collect the basics - transaction ID, date posted, description, amount and currency - in simple array format:
 
     yodSummaries.card_transaction_basics(1,2)
 
