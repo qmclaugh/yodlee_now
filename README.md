@@ -1,6 +1,6 @@
 # Yodlee Now
 
-Easy access the new Yodlee REST API. This API is the easiest way ever to access financial data at the tens of thousands of institutions partnered with Yodlee.  See http://yodlee.com and http://devnow.yodlee.com.
+Get real easy access the new Yodlee REST API via this Ruby Gem. This API is the easiest way ever to access financial data at the tens of thousands of institutions partnered with Yodlee.  See http://yodlee.com and http://devnow.yodlee.com.
 
 ## Installation
 
