@@ -33,9 +33,6 @@ Some sample code for irb or rails' console:
     yodUser.login('testUserLogin','testUserPassword',cobSession.sessionToken)
     yodSummaries = YodleeNow::ItemSummaries.new
     yodSummaries.load(cobSession.sessionToken,yodUser.sessionToken)
-    yodSummaries.card_txn_test
-
-This will return sample transaction data for the last account added by the test user referenced above.
 
 Note the login and load methods return true or false so you can test for response success.  Check the error method on the object if you receive a false response.
 
