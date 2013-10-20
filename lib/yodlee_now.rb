@@ -102,24 +102,35 @@ module YodleeNow
     end
 
     def institution_names
-      self.response.collect{ |res| res['itemDisplayName']}
+      self.response.collect{ |res| [res['itemId'],res['itemDisplayName']]}
     end
 
-    def account_names(institution_order)
-      self.response[institution_order]['itemData']['accounts'].collect{|t| [t['accountName'], t['accountNumber']]}
+    def institution_data(institution_id)
+      self.response.select{|i| i['itemId'] == institution_id}.first
     end
 
-    def account_data(institution_order,account_order)
-      self.response[institution_order]['itemData']['accounts'][account_order]
+    def account_names(institution_id)
+      idata = institution_data(institution_id)
+      return nil if idata.blank?
+      idata['itemData']['accounts'].collect{|t| [t['accountId'], t['accountName'], t['accountNumber']]}
     end
 
-    def card_transactions(institution_order,account_order)
-      self.response[institution_order]['itemData']['accounts'][account_order]['cardTransactions']
+    def account_data(institution_id,account_id)
+      idata = institution_data(institution_id)
+      return nil if idata.blank?
+      idata['itemData']['accounts'].select{|a| a['accountId'] == account_id}.first
+    end
+
+    def card_transactions(institution_id,account_id)
+      adata = account_data(institution_id,account_id)
+      return nil if adata.blank?
+      adata['cardTransactions']
     end
     
-    def card_transaction_basics(institution_order,account_order)
-      txns = []
-      self.response[institution_order]['itemData']['accounts'][account_order]['cardTransactions'].each do |txn|
+    def card_transaction_basics(institution_id,account_id)
+      txns = card_transactions(institution_id,account_id)
+      txns_out =[]
+      txns.each do |txn|
         if txn['postDate'].nil? || txn['postDate'].empty? || txn['postDate']['date'].nil? || txn['postDate']['date'].empty?
           postdate = 'NOT POSTED'
         else
@@ -132,9 +143,11 @@ module YodleeNow
         end
         amount = txn['transAmount']['amount']
         currency = txn['transAmount']['currencyCode']
-        txns << [txn['cardTransactionId'],txndate, postdate,txn['description'],amount,currency]
+        name=txn['description'].split(' - ').first.strip.titleize
+        categories=txn['description'].split(' - ').last.strip.titleize
+        txns_out << [txn['cardTransactionId'],txndate, postdate,txn['description'],name,categories,amount,currency]
       end
-      return txns
+      return txns_out
     end
 
   end
