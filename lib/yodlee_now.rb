@@ -114,33 +114,33 @@ module YodleeNow
 
     def account_names(institution_id)
       idata = institution_data(institution_id)
-      return [] if idata.empty?
+      return [] if idata.blank?
       idata['itemData']['accounts'].collect{|t| [t['accountId'], t['accountName'], t['accountNumber']]}
     end
 
     def account_data(institution_id,account_id)
       idata = institution_data(institution_id)
-      return [] if idata.empty?
+      return [] if idata.blank?
       idata['itemData']['accounts'].select{|a| a['accountId'] == account_id}.first
     end
 
     def card_transactions(institution_id,account_id)
       adata = account_data(institution_id,account_id)
-      return [] if adata.empty?
+      return [] if adata.blank?
       adata['cardTransactions']
     end
     
     def card_transaction_basics(institution_id,account_id)
       txns = card_transactions(institution_id,account_id)
       txns_out =[]
-      unless txns.empty?
+      unless txns.blank?
         txns.each do |txn|
-          if txn['postDate'].nil? || txn['postDate'].empty? || txn['postDate']['date'].nil? || txn['postDate']['date'].empty?
+          if txn['postDate'].nil? || txn['postDate'].blank? || txn['postDate']['date'].nil? || txn['postDate']['date'].blank?
             postdate = nil
           else
             postdate = Date.parse(txn['postDate']['date'])
           end
-          if txn['transDate'].nil? || txn['transDate'].empty? || txn['transDate']['date'].nil? || txn['transDate']['date'].empty?
+          if txn['transDate'].nil? || txn['transDate'].blank? || txn['transDate']['date'].nil? || txn['transDate']['date'].blank?
             txndate = nil
           else
             txndate = Date.parse(txn['transDate']['date'])
