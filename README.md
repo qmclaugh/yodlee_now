@@ -2,6 +2,8 @@
 
 Yodlee's new REST API allows easy access to financial data at the tens of thousands of institutions partnered with Yodlee.  This gem wraps the REST API.  See http://yodlee.com and http://devnow.yodlee.com for more detail on Yodlee's offerings.
 
+This gem currently relies on Rails for some helper methods.  
+
 ## Installation
 
 Add this line to your application's Gemfile:

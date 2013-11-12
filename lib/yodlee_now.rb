@@ -33,6 +33,7 @@ module YodleeNow
         http.use_ssl = true
       end
       
+      #TODO: DRY up http requests
       res = http.post(uri.request_uri,"cobrandLogin=#{cobrandLogin}&cobrandPassword=#{cobrandPassword}")
       json = JSON.parse(res.body)
       @response = json
@@ -60,6 +61,7 @@ module YodleeNow
         http.use_ssl = true
       end
       
+      #TODO: DRY up http requests
       res = http.post(uri.request_uri,"login=#{login}&password=#{password}&cobSessionToken=#{cobSessionToken}")
       json = JSON.parse(res.body)
       @response = json
@@ -87,6 +89,7 @@ module YodleeNow
         http.use_ssl = true
       end
       
+      #TODO: DRY up http requests
       res = http.post(uri.request_uri,"cobSessionToken=#{cobSessionToken}&userSessionToken=#{userSessionToken}")
       begin
         json = JSON.parse(res.body)
@@ -111,41 +114,45 @@ module YodleeNow
 
     def account_names(institution_id)
       idata = institution_data(institution_id)
-      return nil if idata.blank?
+      return [] if idata.empty?
       idata['itemData']['accounts'].collect{|t| [t['accountId'], t['accountName'], t['accountNumber']]}
     end
 
     def account_data(institution_id,account_id)
       idata = institution_data(institution_id)
-      return nil if idata.blank?
+      return [] if idata.empty?
       idata['itemData']['accounts'].select{|a| a['accountId'] == account_id}.first
     end
 
     def card_transactions(institution_id,account_id)
       adata = account_data(institution_id,account_id)
-      return nil if adata.blank?
+      return [] if adata.empty?
       adata['cardTransactions']
     end
     
     def card_transaction_basics(institution_id,account_id)
       txns = card_transactions(institution_id,account_id)
       txns_out =[]
-      txns.each do |txn|
-        if txn['postDate'].nil? || txn['postDate'].empty? || txn['postDate']['date'].nil? || txn['postDate']['date'].empty?
-          postdate = 'NOT POSTED'
-        else
-          postdate = Date.parse(txn['postDate']['date']).to_s
+      unless txns.empty?
+        txns.each do |txn|
+          if txn['postDate'].nil? || txn['postDate'].empty? || txn['postDate']['date'].nil? || txn['postDate']['date'].empty?
+            postdate = nil
+          else
+            postdate = Date.parse(txn['postDate']['date'])
+          end
+          if txn['transDate'].nil? || txn['transDate'].empty? || txn['transDate']['date'].nil? || txn['transDate']['date'].empty?
+            txndate = nil
+          else
+            txndate = Date.parse(txn['transDate']['date'])
+          end
+          amount = txn['transAmount']['amount']
+          currency = txn['transAmount']['currencyCode']
+          description = txn['description'].gsub /\b&amp;\b/, "" 
+          name=description.split(' - ').first.gsub('.',' ').gsub('*',' ').delete('0-9').strip.titleize.squeeze(" ")
+          #TODO - refactor name parsing above - work in progress!
+          categories=txn['description'].split(' - ').last.strip.titleize
+          txns_out << [txn['cardTransactionId'],txndate, postdate,description,name,categories,amount,currency]
         end
-        if txn['transDate'].nil? || txn['transDate'].empty? || ['date'].nil? || txn['transDate']['date'].empty?
-          txndate = 'NO TXN DATE'
-        else
-          txndate = Date.parse(txn['transDate']['date']).to_s
-        end
-        amount = txn['transAmount']['amount']
-        currency = txn['transAmount']['currencyCode']
-        name=txn['description'].split(' - ').first.strip.titleize
-        categories=txn['description'].split(' - ').last.strip.titleize
-        txns_out << [txn['cardTransactionId'],txndate, postdate,txn['description'],name,categories,amount,currency]
       end
       return txns_out
     end

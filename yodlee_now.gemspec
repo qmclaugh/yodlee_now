@@ -8,8 +8,8 @@ Gem::Specification.new do |gem|
   gem.version       = YodleeNow::VERSION
   gem.authors       = ["Quinn McLaughlin"]
   gem.email         = ["quinn@coincidence.net"]
-  gem.description   = %q{'A simple gem that allows basic access to the Yodlee REST API'}
-  gem.summary       = %q{'Access the Yodlee REST API real fast.''}
+  gem.description   = %q{'A simple gem to quickly get high level access to Yodlee's aggregated financial data.'}
+  gem.summary       = %q{'Access the Yodlee REST API easily.''}
   gem.homepage      = "http://github.com/qmclaugh/yodlee_now"
 
   gem.files         = `git ls-files`.split($/)
