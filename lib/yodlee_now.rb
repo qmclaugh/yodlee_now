@@ -114,33 +114,33 @@ module YodleeNow
 
     def account_names(institution_id)
       idata = institution_data(institution_id)
-      return [] if idata.blank?
+      return [] if idata.nil? || idata.empty?
       idata['itemData']['accounts'].collect{|t| [t['accountId'], t['accountName'], t['accountNumber']]}
     end
 
     def account_data(institution_id,account_id)
       idata = institution_data(institution_id)
-      return [] if idata.blank?
+      return [] if idata.nil? || idata.empty?
       idata['itemData']['accounts'].select{|a| a['accountId'] == account_id}.first
     end
 
     def card_transactions(institution_id,account_id)
       adata = account_data(institution_id,account_id)
-      return [] if adata.blank?
+      return [] if adata.nil? || adata.empty?
       adata['cardTransactions']
     end
     
     def card_transaction_basics(institution_id,account_id)
       txns = card_transactions(institution_id,account_id)
       txns_out =[]
-      unless txns.blank?
+      unless txns.nil? || txns.empty?
         txns.each do |txn|
-          if txn['postDate'].nil? || txn['postDate'].blank? || txn['postDate']['date'].nil? || txn['postDate']['date'].blank?
+          if txn['postDate'].nil? || txn['postDate'].empty? || txn['postDate']['date'].nil? || txn['postDate']['date'].empty?
             postdate = nil
           else
             postdate = Date.parse(txn['postDate']['date'])
           end
-          if txn['transDate'].nil? || txn['transDate'].blank? || txn['transDate']['date'].nil? || txn['transDate']['date'].blank?
+          if txn['transDate'].nil? || txn['transDate'].empty? || txn['transDate']['date'].nil? || txn['transDate']['date'].empty?
             txndate = nil
           else
             txndate = Date.parse(txn['transDate']['date'])
@@ -148,9 +148,9 @@ module YodleeNow
           amount = txn['transAmount']['amount']
           currency = txn['transAmount']['currencyCode']
           description = txn['description'].gsub /\b&amp;\b/, "" 
-          name=description.split(' - ').first.gsub('.',' ').gsub('*',' ').delete('0-9').strip.titleize.squeeze(" ")
+          name=description.split(' - ').first.gsub('.',' ').gsub('*',' ').delete('0-9').strip.upcase.squeeze(" ")
           #TODO - refactor name parsing above - work in progress!
-          categories=txn['description'].split(' - ').last.strip.titleize
+          categories=txn['description'].split(' - ').last.strip.upcase
           txns_out << [txn['cardTransactionId'],txndate, postdate,description,name,categories,amount,currency]
         end
       end
