@@ -10,14 +10,17 @@ module YodleeNow
     "END_POINT"=>
       {
         "sandboxBaseUrl"              =>  "https://rest.developer.yodlee.com/services/srest/restserver/v1.0", 
-        "stagingBaseUrl"              =>  "https://64.14.28.203/yodsoap/srest/sdkmaster/v1.0/", 
+        "stagingBaseUrl"              =>  "https://64.14.28.203/yodsoap/srest/sdkmaster/v1.0", 
         "URL_COBRAND_SESSION_TOKEN"   =>  "/authenticate/coblogin", 
         "URL_USER_SESSION_TOKEN"      =>  "/authenticate/login",
         "URL_SEARCH_SITES"            =>  "/jsonsdk/SiteTraversal/searchSite",
         "URL_GET_SITE_LOGIN_FORM"     =>  "/jsonsdk/SiteAccountManagement/getSiteLoginForm",
         "URL_GET_ITEM_SUMMARIES"      =>  "/jsonsdk/DataService/getItemSummaries", 
         "URL_ADD_SITE_ACCOUNT"        =>  "/jsonsdk/SiteAccountManagement/addSiteAccount",
-        "URL_REGISTER_USER"           =>  "/jsonsdk/UserRegistration/register3" 
+        "URL_REGISTER_USER"           =>  "/jsonsdk/UserRegistration/register3",
+        "URL_USER_SEARCH_REQUEST"     =>  "/jsonsdk/TransactionSearchService/executeUserSearchRequest",
+        "URL_GET_USER_TRANSACTIONS"   =>  "/jsonsdk/TransactionSearchService/getUserTransactions"
+
       }
     } 
 
@@ -225,44 +228,104 @@ module YodleeNow
       idata['itemData']['accounts'].select{|a| a['accountId'] == account_id}.first
     end
 
-    def card_transactions(institution_id,account_id)
-      adata = account_data(institution_id,account_id)
-      return [] if adata.nil? || adata.empty?
-      adata['cardTransactions']
-    end
+    # DEPRECIATED - use get transaction details
+    #
+    # def card_transactions(institution_id,account_id)
+    #   adata = account_data(institution_id,account_id)
+    #   return [] if adata.nil? || adata.empty?
+    #   adata['cardTransactions']
+    # end
 
-    def banking_transactions(institution_id,account_id)
+    def account_transactions(institution_id,account_id)
       adata = account_data(institution_id,account_id)
       return [] if adata.nil? || adata.empty?
       adata
     end
     
-    def card_transaction_basics(institution_id,account_id)
-      txns = card_transactions(institution_id,account_id)
-      txns_out =[]
-      unless txns.nil? || txns.empty?
-        txns.each do |txn|
-          if txn['postDate'].nil? || txn['postDate'].empty? || txn['postDate']['date'].nil? || txn['postDate']['date'].empty?
-            postdate = nil
-          else
-            postdate = Date.parse(txn['postDate']['date'])
-          end
-          if txn['transDate'].nil? || txn['transDate'].empty? || txn['transDate']['date'].nil? || txn['transDate']['date'].empty?
-            txndate = nil
-          else
-            txndate = Date.parse(txn['transDate']['date'])
-          end
-          amount = txn['transAmount']['amount']
-          currency = txn['transAmount']['currencyCode']
-          description = txn['description'].gsub /\b&amp;\b/, "" 
-          name=description.split(' - ').first.gsub('.',' ').gsub('*',' ').delete('0-9').strip.upcase.squeeze(" ")
-          #TODO - refactor name parsing above - work in progress!
-          categories=txn['description'].split(' - ').last.strip.upcase
-          txns_out << [txn['cardTransactionId'],txndate, postdate,description,name,categories,amount,currency]
-        end
-      end
-      return txns_out
-    end
+    # DEPRECIATED - use get transaction details
+    #
+    # def card_transaction_basics(institution_id,account_id)
+    #   txns = card_transactions(institution_id,account_id)
+    #   txns_out =[]
+    #   unless txns.nil? || txns.empty?
+    #     txns.each do |txn|
+    #       if txn['postDate'].nil? || txn['postDate'].empty? || txn['postDate']['date'].nil? || txn['postDate']['date'].empty?
+    #         postdate = nil
+    #       else
+    #         postdate = Date.parse(txn['postDate']['date'])
+    #       end
+    #       if txn['transDate'].nil? || txn['transDate'].empty? || txn['transDate']['date'].nil? || txn['transDate']['date'].empty?
+    #         txndate = nil
+    #       else
+    #         txndate = Date.parse(txn['transDate']['date'])
+    #       end
+    #       amount = txn['transAmount']['amount']
+    #       currency = txn['transAmount']['currencyCode']
+    #       description = txn['description'].gsub /\b&amp;\b/, "" 
+    #       name=description.split(' - ').first.gsub('.',' ').gsub('*',' ').delete('0-9').strip.upcase.squeeze(" ")
+    #       #TODO - refactor name parsing above - work in progress!
+    #       categories=txn['description'].split(' - ').last.strip.upcase
+    #       txns_out << [txn['cardTransactionId'],txndate, postdate,description,name,categories,amount,currency]
+    #     end
+    #   end
+    #   return txns_out
+    # end
   end
 
+  class TransactionDetails
+    attr_reader :response, :error
+    def search_request(cobSessionToken,userSessionToken,account_id = nil,start_date = Time.now-(60*60*24*30),end_date = Time.now, options={})
+      uri = URI.parse(YODLEE_API_URLS["END_POINT"]["sandboxBaseUrl"]+YODLEE_API_URLS["END_POINT"]["URL_USER_SEARCH_REQUEST"])
+
+      start_date_str = start_date.strftime('%m-%d-%Y')
+      end_date_str = end_date.strftime('%m-%d-%Y')
+      url_options ={
+        'containerType'                         => (options['containerType']                        || 'All'),
+        'higherFetchLimit'                      => (options['higherFetchLimit']                     || 1000),
+        'lowerFetchLimit'                       => (options['lowerFetchLimit']                      || 1),
+        'resultRange.endNumber'                 => (options['resultRange.endNumber']                || 20),
+        'resultRange.startNumber'               => (options['resultRange.startNumber']              || 20),
+        'searchClients.clientId'                => (options['searchClients.clientId']               || 1),
+        'searchClients.clientName'              => (options['searchClients.clientName']             || 'DataSearchService'),
+        'ignoreUserInput'                       => (options['ignureUserInput']                      || 'true'),
+        'searchFilter.currencyCode'             => (options['searchFilter.currencyCode']            || 'USD'),
+        'searchFilter.postDateRange.fromDate'   => start_date_str,
+        'searchFilter.postDateRange.toDate'     => end_date_str,
+        'searchFilter.transactionSplitType'     => (options['searchFilter.transactionSplitType']    || 'ALL_TRANSACTION')
+      }
+
+      unless account_id.nil?
+        url_options['searchFilter.itemAccountId.identifier'] = account_id
+      end
+
+      url_string = "cobSessionToken=#{cobSessionToken}&userSessionToken=#{userSessionToken}"
+
+      url_options.each do |k,v|
+        url_string += "&transactionSearchRequest.#{k}=#{v}"
+      end
+
+      puts "---"
+      puts url_string
+      puts "---"
+
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      
+      if uri.scheme =='https'
+        http.use_ssl = true
+      end
+      
+      #TODO: DRY up http requests
+
+      res = http.post(uri.request_uri, url_string)
+      begin
+        json = JSON.parse(res.body)
+        @response = json
+      rescue
+        @error=response.body
+      end
+      # @error = json['Error']
+      @error.nil? ? true : false
+    end
+  end
 end
