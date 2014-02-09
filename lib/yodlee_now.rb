@@ -3,6 +3,7 @@ require 'uri'
 require 'net/ssh'
 require 'net/http'
 require 'json'
+require 'nori'
 
 module YodleeNow
 
@@ -19,7 +20,8 @@ module YodleeNow
         "URL_ADD_SITE_ACCOUNT"        =>  "/jsonsdk/SiteAccountManagement/addSiteAccount",
         "URL_REGISTER_USER"           =>  "/jsonsdk/UserRegistration/register3",
         "URL_USER_SEARCH_REQUEST"     =>  "/jsonsdk/TransactionSearchService/executeUserSearchRequest",
-        "URL_GET_USER_TRANSACTIONS"   =>  "/jsonsdk/TransactionSearchService/getUserTransactions"
+        "URL_GET_USER_TRANSACTIONS"   =>  "/jsonsdk/TransactionSearchService/getUserTransactions",
+        "URL_ACCOUNT_SUMMARY"         =>  "/account/summary/all"
 
       }
     } 
@@ -180,6 +182,54 @@ module YodleeNow
     end
   end
     
+  class AccountSummary
+    attr_reader :response, :error
+    def load(cobSessionToken,userSessionToken)
+    
+      uri = URI.parse(YODLEE_API_URLS["END_POINT"]["sandboxBaseUrl"]+YODLEE_API_URLS["END_POINT"]["URL_ACCOUNT_SUMMARY"])
+      params = { :cobSessionToken => cobSessionToken, :userSessionToken => userSessionToken }
+      uri.query = URI.encode_www_form(params)
+      http = Net::HTTP.new(uri.host, uri.port)
+      
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      
+      if uri.scheme =='https'
+        http.use_ssl = true
+      end
+      
+      #TODO: DRY up http requests
+      #This should be POST and a JSON response, like all other calls. - but it's GET and XML.  
+      res = http.get(uri)
+      begin
+
+        parser = Nori.new
+        hash = parser.parse(res.body)
+        @response = hash
+      rescue
+        @error=res.body
+      end
+      # @error = json['Error']
+      @error.nil? ? true : false
+    end
+
+    def basics
+      # this should be clean json data- but we're working with parsed XML on this method.
+      res = []
+      @response["ns3:ItemAccountSummaries"]["ns3:ItemContainer"].each do |container|
+        container_name = container.first.first
+        container[container_name].each do |account|
+          res << {
+            :type => container_name[4..100],  #remove xml namespacing - hackish.
+            :name => account["AccountName"],
+            :itemId => account["itemId"],
+            :itemAccountId => account["itemAccountId"]
+          }
+        end
+      end
+      return res
+    end
+  end
+    
   class ItemSummaries
     attr_reader :response, :error
     def load(cobSessionToken,userSessionToken)
@@ -199,7 +249,7 @@ module YodleeNow
         json = JSON.parse(res.body)
         @response = json
       rescue
-        @error=response.body
+        @error=res.body
       end
       # @error = json['Error']
       @error.nil? ? true : false
@@ -273,8 +323,12 @@ module YodleeNow
   end
 
   class TransactionDetails
-    attr_reader :response, :error
-    def search_request(cobSessionToken,userSessionToken,account_id = nil,start_date = Time.now-(60*60*24*30),end_date = Time.now, options={})
+    attr_reader :response, :error, :cobSessionToken, :userSessionToken, :searchIdentifier
+    def search_request(cobSessionToken,userSessionToken,account_id = nil,start_date = Time.now-(60*60*24*60),end_date = Time.now, options={})
+
+      @cobSessionToken = cobSessionToken
+      @userSessionToken = userSessionToken
+
       uri = URI.parse(YODLEE_API_URLS["END_POINT"]["sandboxBaseUrl"]+YODLEE_API_URLS["END_POINT"]["URL_USER_SEARCH_REQUEST"])
 
       start_date_str = start_date.strftime('%m-%d-%Y')
@@ -283,7 +337,7 @@ module YodleeNow
         'containerType'                         => (options['containerType']                        || 'All'),
         'higherFetchLimit'                      => (options['higherFetchLimit']                     || 1000),
         'lowerFetchLimit'                       => (options['lowerFetchLimit']                      || 1),
-        'resultRange.endNumber'                 => (options['resultRange.endNumber']                || 100),
+        'resultRange.endNumber'                 => (options['resultRange.endNumber']                || 50),
         'resultRange.startNumber'               => (options['resultRange.startNumber']              || 1),
         'searchClients.clientId'                => (options['searchClients.clientId']               || 1),
         'searchClients.clientName'              => (options['searchClients.clientName']             || 'DataSearchService'),
@@ -304,9 +358,35 @@ module YodleeNow
         url_string += "&transactionSearchRequest.#{k}=#{v}"
       end
 
-      puts "---"
-      puts url_string
-      puts "---"
+
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      
+      if uri.scheme =='https'
+        http.use_ssl = true
+      end
+      
+      #TODO: DRY up http requests
+
+      res = http.post(uri.request_uri, url_string)
+      begin
+        json = JSON.parse(res.body)
+        @response = json
+        @searchIdentifier = @response["searchIdentifier"]["identifier"]
+        @txn_count = ''
+
+      rescue
+        @error=res.body
+      end
+      @error.nil? ? true : false
+    end
+
+    def additional_txns(startNum, endNum)
+
+      uri = URI.parse(YODLEE_API_URLS["END_POINT"]["sandboxBaseUrl"]+YODLEE_API_URLS["END_POINT"]["URL_GET_USER_TRANSACTIONS"])
+      url_string = "cobSessionToken=#{@cobSessionToken}&userSessionToken=#{@userSessionToken}&searchFetchRequest.searchIdentifier.identifier=#{@searchIdentifier}&searchFetchRequest.searchResultRange.startNumber=#{startNum}&searchFetchRequest.searchResultRange.endNumber=#{endNum}"
+
+
 
       http = Net::HTTP.new(uri.host, uri.port)
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -327,5 +407,24 @@ module YodleeNow
       # @error = json['Error']
       @error.nil? ? true : false
     end
+
+    def basics
+      res =[]
+      @response["searchResult"]["transactions"].each do |txn|
+        res << {
+          :accountName    => txn['account']['accountName'],
+          :accountId      => txn['account']['itemAccountId'],
+          :transactionId  => txn['transactionId'],
+          :description    => txn['description']['description'],
+          :amount         => txn['amount']['amount'],
+          :currency       => txn['amount']['currencyCode'],
+          :status         => txn['status']['description'],
+          :checknumber    => txn['checkNumber'],
+          :category       => txn['category']['categoryName']
+        }
+      end
+      return res
+    end
   end
+
 end

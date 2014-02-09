@@ -17,7 +17,7 @@ Gem::Specification.new do |gem|
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.require_paths = ["lib"]
   gem.add_dependency 'net-ssh'
-  # gem.add_dependency 'open-uri'
-  # gem.add_dependency 'libv8', '~> 3.16.14.0'
+  gem.add_dependency 'json'
+  gem.add_dependency 'nori'
 
 end
