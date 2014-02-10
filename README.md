@@ -2,8 +2,6 @@
 
 Yodlee's new REST API allows easy access to financial data at the tens of thousands of institutions partnered with Yodlee.  This gem wraps the REST API.  See http://yodlee.com and http://devnow.yodlee.com for more detail on Yodlee's offerings.
 
-This gem currently relies on Rails for some helper methods.  
-
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -56,11 +54,11 @@ For the entire JSON response of all matches for institutions containing 'chase' 
     
     yodSite.response
 
-But this gem also has a helper method, sort of great for a quick HTML select if you want the user to choose their institution (see the example of this on the Yodlee developer site, where you can add institutions for your test users):
+The gem also has a helper method, useful for a quick HTML select if you want the user to choose their institution (see the example of this on the Yodlee developer site, where you can add institutions for your test users):
 
     yodSite.basics
 
-Once you have the siteId, you can get a login form for that site with:
+Once you have chosen the correct siteId, you can get load a custom login form for that site with:
 
     @form_fields = yodSite.login_form(siteId)
 
@@ -129,7 +127,8 @@ To load a different range of transactions within the total number of hits, execu
 
 The full options of the gem's search request are:
 
-    yodTxns.search_request(cobSession.sessionToken,yodUser.sessionToken, accountId, startDateTime, endDateTime, options)
+    yodTxns.search_request(cobSession.sessionToken,yodUser.sessionToken, accountId, startDateTime, 
+      endDateTime, options)
 
 The options has is based on the variables outlined in the Yodlee documentation for this method, http://developer.yodlee.com/Indy_FinApp/Aggregation_Services_Guide/REST_API_Reference/executeUserSearchRequest  Note that the gem prepends the "transactionSearchRequest." portion of the Yodlee variable name.
 
