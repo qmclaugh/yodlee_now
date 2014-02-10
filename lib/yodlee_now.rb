@@ -132,7 +132,11 @@ module YodleeNow
     def basics
       sites=[]
       self.response.each do |res|
-        sites << [res['defaultDisplayName'],res['defaultOrgDisplayName'],res['siteId']]
+        sites << {
+          :defaultDisplayName      => res['defaultDisplayName'],
+          :defaultOrgDisplayName  => res['defaultOrgDisplayName'],
+          :siteId                 => res['siteId']
+        }
       end
       return sites
     end
@@ -229,98 +233,99 @@ module YodleeNow
       return res
     end
   end
+   
+  # DEPRECIATED
+  #
+
+  # class ItemSummaries
+  #   attr_reader :response, :error
+  #   def load(cobSessionToken,userSessionToken)
     
-  class ItemSummaries
-    attr_reader :response, :error
-    def load(cobSessionToken,userSessionToken)
+  #     uri = URI.parse(YODLEE_API_URLS["END_POINT"]["sandboxBaseUrl"]+YODLEE_API_URLS["END_POINT"]["URL_GET_ITEM_SUMMARIES"])
+  #     http = Net::HTTP.new(uri.host, uri.port)
+      
+  #     http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      
+  #     if uri.scheme =='https'
+  #       http.use_ssl = true
+  #     end
+      
+  #     #TODO: DRY up http requests
+  #     res = http.post(uri.request_uri,"cobSessionToken=#{cobSessionToken}&userSessionToken=#{userSessionToken}")
+  #     begin
+  #       json = JSON.parse(res.body)
+  #       @response = json
+  #     rescue
+  #       @error=res.body
+  #     end
+  #     # @error = json['Error']
+  #     @error.nil? ? true : false
+  #   end
+  #   def card_txn_test
+  #     self.response.last['itemData']['accounts'].last['cardTransactions'].collect{|t| [t['description'],t['transAmount']['amount'], Date.parse(t['postDate']['date']).to_s]}
+  #   end
+
+  #   def institution_names
+  #     self.response.collect{ |res| [res['itemId'],res['itemDisplayName']]}
+  #   end
+
+  #   def institution_data(institution_id)
+  #     self.response.select{|i| i['itemId'] == institution_id}.first
+  #   end
+
+  #   def account_names(institution_id)
+  #     idata = institution_data(institution_id)
+  #     return [] if idata.nil? || idata.empty?
+  #     idata['itemData']['accounts'].collect{|t| [t['accountId'], t['accountName'], t['accountNumber']]}
+  #   end
+
+  #   def account_data(institution_id,account_id)
+  #     idata = institution_data(institution_id)
+  #     return [] if idata.nil? || idata.empty?
+  #     idata['itemData']['accounts'].select{|a| a['accountId'] == account_id}.first
+  #   end
+
+  #   #
+  #   # def card_transactions(institution_id,account_id)
+  #   #   adata = account_data(institution_id,account_id)
+  #   #   return [] if adata.nil? || adata.empty?
+  #   #   adata['cardTransactions']
+  #   # end
+
+  #   def account_transactions(institution_id,account_id)
+  #     adata = account_data(institution_id,account_id)
+  #     return [] if adata.nil? || adata.empty?
+  #     adata
+  #   end
     
-      uri = URI.parse(YODLEE_API_URLS["END_POINT"]["sandboxBaseUrl"]+YODLEE_API_URLS["END_POINT"]["URL_GET_ITEM_SUMMARIES"])
-      http = Net::HTTP.new(uri.host, uri.port)
-      
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      
-      if uri.scheme =='https'
-        http.use_ssl = true
-      end
-      
-      #TODO: DRY up http requests
-      res = http.post(uri.request_uri,"cobSessionToken=#{cobSessionToken}&userSessionToken=#{userSessionToken}")
-      begin
-        json = JSON.parse(res.body)
-        @response = json
-      rescue
-        @error=res.body
-      end
-      # @error = json['Error']
-      @error.nil? ? true : false
-    end
-    def card_txn_test
-      self.response.last['itemData']['accounts'].last['cardTransactions'].collect{|t| [t['description'],t['transAmount']['amount'], Date.parse(t['postDate']['date']).to_s]}
-    end
-
-    def institution_names
-      self.response.collect{ |res| [res['itemId'],res['itemDisplayName']]}
-    end
-
-    def institution_data(institution_id)
-      self.response.select{|i| i['itemId'] == institution_id}.first
-    end
-
-    def account_names(institution_id)
-      idata = institution_data(institution_id)
-      return [] if idata.nil? || idata.empty?
-      idata['itemData']['accounts'].collect{|t| [t['accountId'], t['accountName'], t['accountNumber']]}
-    end
-
-    def account_data(institution_id,account_id)
-      idata = institution_data(institution_id)
-      return [] if idata.nil? || idata.empty?
-      idata['itemData']['accounts'].select{|a| a['accountId'] == account_id}.first
-    end
-
-    # DEPRECIATED - use get transaction details
-    #
-    # def card_transactions(institution_id,account_id)
-    #   adata = account_data(institution_id,account_id)
-    #   return [] if adata.nil? || adata.empty?
-    #   adata['cardTransactions']
-    # end
-
-    def account_transactions(institution_id,account_id)
-      adata = account_data(institution_id,account_id)
-      return [] if adata.nil? || adata.empty?
-      adata
-    end
-    
-    # DEPRECIATED - use get transaction details
-    #
-    # def card_transaction_basics(institution_id,account_id)
-    #   txns = card_transactions(institution_id,account_id)
-    #   txns_out =[]
-    #   unless txns.nil? || txns.empty?
-    #     txns.each do |txn|
-    #       if txn['postDate'].nil? || txn['postDate'].empty? || txn['postDate']['date'].nil? || txn['postDate']['date'].empty?
-    #         postdate = nil
-    #       else
-    #         postdate = Date.parse(txn['postDate']['date'])
-    #       end
-    #       if txn['transDate'].nil? || txn['transDate'].empty? || txn['transDate']['date'].nil? || txn['transDate']['date'].empty?
-    #         txndate = nil
-    #       else
-    #         txndate = Date.parse(txn['transDate']['date'])
-    #       end
-    #       amount = txn['transAmount']['amount']
-    #       currency = txn['transAmount']['currencyCode']
-    #       description = txn['description'].gsub /\b&amp;\b/, "" 
-    #       name=description.split(' - ').first.gsub('.',' ').gsub('*',' ').delete('0-9').strip.upcase.squeeze(" ")
-    #       #TODO - refactor name parsing above - work in progress!
-    #       categories=txn['description'].split(' - ').last.strip.upcase
-    #       txns_out << [txn['cardTransactionId'],txndate, postdate,description,name,categories,amount,currency]
-    #     end
-    #   end
-    #   return txns_out
-    # end
-  end
+  #   #
+  #   # def card_transaction_basics(institution_id,account_id)
+  #   #   txns = card_transactions(institution_id,account_id)
+  #   #   txns_out =[]
+  #   #   unless txns.nil? || txns.empty?
+  #   #     txns.each do |txn|
+  #   #       if txn['postDate'].nil? || txn['postDate'].empty? || txn['postDate']['date'].nil? || txn['postDate']['date'].empty?
+  #   #         postdate = nil
+  #   #       else
+  #   #         postdate = Date.parse(txn['postDate']['date'])
+  #   #       end
+  #   #       if txn['transDate'].nil? || txn['transDate'].empty? || txn['transDate']['date'].nil? || txn['transDate']['date'].empty?
+  #   #         txndate = nil
+  #   #       else
+  #   #         txndate = Date.parse(txn['transDate']['date'])
+  #   #       end
+  #   #       amount = txn['transAmount']['amount']
+  #   #       currency = txn['transAmount']['currencyCode']
+  #   #       description = txn['description'].gsub /\b&amp;\b/, "" 
+  #   #       name=description.split(' - ').first.gsub('.',' ').gsub('*',' ').delete('0-9').strip.upcase.squeeze(" ")
+  #   #       #TODO - refactor name parsing above - work in progress!
+  #   #       categories=txn['description'].split(' - ').last.strip.upcase
+  #   #       txns_out << [txn['cardTransactionId'],txndate, postdate,description,name,categories,amount,currency]
+  #   #     end
+  #   #   end
+  #   #   return txns_out
+  #   # end
+  # end
 
   class TransactionDetails
     attr_reader :response, :error, :cobSessionToken, :userSessionToken, :searchIdentifier
@@ -409,9 +414,17 @@ module YodleeNow
     end
 
     def basics
-      res =[]
-      @response["searchResult"]["transactions"].each do |txn|
-        res << {
+      if @response['numberOfHits'].nil?
+        txns = @response['transactions']
+        res = {:transactions => []}
+      else
+        txns = @response["searchResult"]["transactions"]
+        res = {:numberOfHits => @response['numberOfHits'], :transactions => []}
+      end
+
+
+      txns.each do |txn|
+        res[:transactions] << {
           :accountName    => txn['account']['accountName'],
           :accountId      => txn['account']['itemAccountId'],
           :transactionId  => txn['transactionId'],
