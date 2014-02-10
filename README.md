@@ -83,7 +83,7 @@ And make sure to check
 
 #### Review User's Accounts
 
-A user can have several *Accounts* at one financial *Site*.  To get to a user's transactions, it is convenient to use the specific accountId within a Site.
+A user can have several *Accounts* at one financial *Site*.  To get to a user's transactions, it is convenient to use the specific accountId within a Site, which this class returns.
 
     yodAccounts = YodleeNow::AccountSummary.new
     yodAccounts.load(cobSession.sessionToken,yodUser.sessionToken)
