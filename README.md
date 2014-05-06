@@ -2,6 +2,8 @@
 
 Yodlee's new REST API allows easy access to financial data at the tens of thousands of institutions partnered with Yodlee.  This gem wraps the REST API.  See http://yodlee.com and http://devnow.yodlee.com for more detail on Yodlee's offerings.
 
+This gem focuses on getting the basics in place quickly - base authentication, adding users and pulling user transaction data for credit card and checking accounts.  Contributions to the gem are appreciated!
+
 ## Installation
 
 Add this line to your application's Gemfile:
