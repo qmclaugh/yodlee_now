@@ -135,6 +135,7 @@ The full options of the gem's search request are:
 The options has is based on the variables outlined in the Yodlee documentation for this method, http://developer.yodlee.com/Indy_FinApp/Aggregation_Services_Guide/REST_API_Reference/executeUserSearchRequest  Note that the gem prepends the "transactionSearchRequest." portion of the Yodlee variable name.
 
 
+
     
 TODO: Better error handling -unified. DRY up API calls. Write tests.
 
